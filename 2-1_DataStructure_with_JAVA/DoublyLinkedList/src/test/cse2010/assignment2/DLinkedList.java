@@ -12,8 +12,9 @@ public class DLinkedList<T> {
      * Create an empty doubly linked list
      */
     public DLinkedList() {
-        header = new Node<T>(null, null, trailer);
+        header = new Node<T>(null, null, null);
         trailer = new Node<T>(null, header, null);
+        header.setNext(trailer);
     }
 
     /**
