@@ -35,12 +35,12 @@ public class BinToDecTest {
 
     @Test
     void testBinToDecBaseCaseTR1() {
-        assertEquals(0, BinToDec.binToDec("0"));
+        assertEquals(0, BinToDec.binToDecTR("0", 0));
     }
 
     @Test
     void testBinToDecBaseCaseTR2() {
-        assertEquals(1, BinToDec.binToDec("1"));
+        assertEquals(1, BinToDec.binToDecTR("1", 0));
     }
 
     @ParameterizedTest
