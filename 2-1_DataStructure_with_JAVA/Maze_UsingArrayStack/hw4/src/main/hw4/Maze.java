@@ -13,6 +13,7 @@ public class Maze {
 
 	private int next_row;
 	private int next_col;
+	private static ArrayStack<Location> _path = new ArrayStack<>(4);
 
 	private int[][] maze;
 	private boolean[][] visited;
@@ -57,7 +58,7 @@ public class Maze {
 		if(row == exit.row && col == exit.col) return true;
 
 		// Search the path ordering north, east, south, and west.
-		ArrayStack<Location> _path = new ArrayStack<>(4);
+		while(!_path.isEmpty()) _path.pop(); // initialize _path
 		_path.push(new Location(0, -1)); // west
 		_path.push(new Location(1, 0)); // south
 		_path.push(new Location(0, 1)); // east
