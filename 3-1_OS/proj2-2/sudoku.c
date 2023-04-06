@@ -58,7 +58,7 @@ void *check_rows(void *arg)
             if (c == 8) valid[0][r] = true;
         }
     }
-    return 0;
+    pthread_exit(NULL);
 }
 
 /*
@@ -68,7 +68,7 @@ void *check_rows(void *arg)
 void *check_columns(void *arg)
 {
     /*
-     * 0번 열부터 8번 행까지 순차적으로 탐색한다.
+     * 0번 열부터 8번 열까지 순차적으로 탐색한다.
      * 각 열은 또 다시 0번 ~ 8번 행으로 구성되어 있으므로, 2중 for문을 사용하여 각 값에 접근한다.
      */
     for (int column = 0; column < 9; ++column) {
@@ -86,7 +86,7 @@ void *check_columns(void *arg)
             if (row == 8) valid[1][column] = true;
         }
     }
-    return 0;
+    pthread_exit(NULL);
 }
 
 /*
@@ -112,11 +112,11 @@ void *check_subgrid(void *arg)
             
             /*
              * 숫자가 중복해서 등장한 경우,
-             * k번 서브그리드에 대한 true 표시를 남기지 않고 함수를 종료한다.
+             * k번 서브그리드에 대한 true 표시를 남기지 않고 스레드를 종료한다.
              */
             if (isVisited[current]) {
                 valid[2][k] = false;
-                return 0;
+                pthread_exit(NULL);
             }
             isVisited[current] = true;
         }
@@ -126,7 +126,7 @@ void *check_subgrid(void *arg)
      * k번 서브그리드에 대해 true 표시를 남긴다.
      */
     valid[2][k] = true;
-    return 0;
+    pthread_exit(NULL);
 }
 
 /*
