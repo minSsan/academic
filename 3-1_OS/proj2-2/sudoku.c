@@ -33,29 +33,30 @@ void *check_rows(void *arg)
      * 0번 행부터 8번 행까지 순차적으로 검사한다.
      * 각 행은 또 다시 0번 ~ 8번 열로 구성되어 있으므로, 2중 for문을 사용하여 각 값에 접근한다.
      */
-    for (int r = 0; r < 9; ++r) {
+    for (int row = 0; row < 9; ++row) {
         /*
-         * isVisited 배열은 인덱스에 해당하는 숫자가 현재 행에서 이미 등장했는지 여부를 체크한다.
-         * 단, 값 그대로를 인덱스로 사용하여 0번 인덱스는 사용하지 않음.
+         * isVisited 배열은 인덱스에 해당하는 숫자가 현재 행에서 등장했는지 체크한다.
+         * 단, 자연수 그대로를 인덱스로 사용하여 0번 인덱스는 사용하지 않는다.
          */
         bool isVisited[10] = {0};
         
-        for (int c = 0; c < 9; ++c) {
-            int current = sudoku[r][c];
+        for (int column = 0; column < 9; ++column) {
+            int current = sudoku[row][column];
             
             /*
-             * 행 안에서 값이 중복하여 등장하면 해당 행의 검사를 중단한다.
+             * 행 안에서 값이 중복하여 등장하는 경우
+             * 해당 행이 올바르지 않음을 표시하고 해당 행의 검사를 중단한다.
              */
             if (isVisited[current]) {
-                valid[0][r] = false;
-                break;
+                valid[0][row] = false;
+                break; // 다음 행을 검사한다.
             }
             
             isVisited[current] = true;
             /*
              * 마지막 열에 대한 검사까지 성공적으로 마쳤다면, 행이 올바르게 구성되었음을 기록한다.
              */
-            if (c == 8) valid[0][r] = true;
+            if (column == 8) valid[0][row] = true;
         }
     }
     pthread_exit(NULL);
@@ -72,17 +73,28 @@ void *check_columns(void *arg)
      * 각 열은 또 다시 0번 ~ 8번 행으로 구성되어 있으므로, 2중 for문을 사용하여 각 값에 접근한다.
      */
     for (int column = 0; column < 9; ++column) {
+        /*
+         * isVisited 배열은 인덱스에 해당하는 숫자가 현재 열에서 등장했는지 체크한다.
+         * 단, 자연수 그대로를 인덱스로 사용하여 0번 인덱스는 사용하지 않는다.
+         */
         bool isVisited[10] = {0};
         
         for (int row = 0; row < 9; ++row) {
             int current = sudoku[row][column];
             
+            /*
+             * 열 안에서 값이 중복하여 등장하는 경우
+             * 해당 열이 올바르지 않음을 표시하고 해당 열의 검사를 중단한다.
+             */
             if (isVisited[current]) {
                 valid[1][column] = false;
-                break;
+                break; // 다음 열을 검사한다.
             }
             
             isVisited[current] = true;
+            /*
+             * 마지막 행에 대한 검사까지 성공적으로 마쳤다면, 열이 올바르게 구성되었음을 기록한다.
+             */
             if (row == 8) valid[1][column] = true;
         }
     }
@@ -91,7 +103,7 @@ void *check_columns(void *arg)
 
 /*
  * 스도쿠 퍼즐의 각 3x3 서브그리드가 올바른지 검사한다.
- * 3x3 서브그리드 번호는 0부터 시작하며, 왼쪽에서 오른쪽으로, 위에서 아래로 증가한다.
+ * 3x3 서브그리드 번호(k)는 0부터 시작하며, 왼쪽에서 오른쪽, 위에서 아래로 증가한다. (0 ~ 8)
  * k번 서브그리드가 올바르면 valid[2][k]에 true를 기록한다.
  */
 void *check_subgrid(void *arg)
@@ -99,20 +111,23 @@ void *check_subgrid(void *arg)
     /*
      * 전달받은 arg를 int형의 k 변수로 변환한다.
      * k를 통해 시작 행 번호, 시작 열 번호를 계산한다.
-     * 1 ~ 9까지의 숫자가 그리드 내에 포함되었는지 확인하기 위해 isVisited 배열을 사용한다.
+     * 1 ~ 9까지의 숫자가 그리드 내에 등장했는지 확인하기 위해 isVisited 배열을 사용한다.
      */
     int k = *(int*)arg;
     int row_start = (k / 3) * 3;
     int col_start = (k % 3) * 3;
     bool isVisited[10] = {0};
     
+    /*
+     * k번째 3 X 3 서브 그리드를 검사한다.
+     */
     for (int i = row_start; i < row_start + 3; ++i) {
         for (int j = col_start; j < col_start + 3; ++j) {
             int current = sudoku[i][j];
             
             /*
              * 숫자가 중복해서 등장한 경우,
-             * k번 서브그리드에 대한 true 표시를 남기지 않고 스레드를 종료한다.
+             * k번 서브그리드에 대해 false 표시를 남기고 스레드를 종료한다.
              */
             if (isVisited[current]) {
                 valid[2][k] = false;
@@ -173,9 +188,9 @@ void check_sudoku(void)
     /*
      * 11개의 스레드가 종료할 때까지 기다린다.
      */
-    pthread_join(row_thread, NULL);
-    pthread_join(col_thread, NULL);
-    for (i = 0; i < 9; ++i) {
+    pthread_join(row_thread, NULL); // 행 검사 스레드
+    pthread_join(col_thread, NULL); // 열 검사 스레드
+    for (i = 0; i < 9; ++i) {       // 서브 그리드 검사 스레드
         pthread_join(subgrid_threads[i], NULL);
     }
 
